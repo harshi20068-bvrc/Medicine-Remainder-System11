@@ -131,8 +131,8 @@ class LoginWindow(ctk.CTk):
 
         user_data = UserModel.authenticate(u, p)
         if user_data:
-            self.on_login_success(user_data)
             self.destroy()
+            self.on_login_success(user_data)
         else:
             self.lbl_login_err.configure(text="Invalid username or password.")
 

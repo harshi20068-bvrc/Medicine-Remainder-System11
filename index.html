@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medicine Reminder System | Smart Health Tracker</title>
+  <meta name="description" content="A modern medicine reminder system with real-time dose tracking, schedule management, adherence reports, and smart notifications.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- App Wrapper -->
+  <div id="app">
+
+    <!-- Auth View (Shown when logged out) -->
+    <div id="auth-screen" class="auth-wrapper">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="logo-icon">💊</div>
+          <h1>Medicine Reminder System</h1>
+          <p>Track doses, manage schedules & stay healthy</p>
+        </div>
+
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab-btn active" id="tab-login-btn" onclick="switchAuthTab('login')">Login</button>
+          <button type="button" class="auth-tab-btn" id="tab-register-btn" onclick="switchAuthTab('register')">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" class="form-control" placeholder="Enter your username" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+          </div>
+          <div id="login-error" class="form-group" style="color: var(--danger); font-size: 0.85rem; display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">🔐 Login to Account</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="register-form" onsubmit="handleRegister(event)" style="display: none;">
+          <div class="form-group">
+            <label for="reg-fullname">Full Name</label>
+            <input type="text" id="reg-fullname" class="form-control" placeholder="e.g. John Doe">
+          </div>
+          <div class="form-group">
+            <label for="reg-username">Username *</label>
+            <input type="text" id="reg-username" class="form-control" placeholder="Choose a username" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password *</label>
+            <input type="password" id="reg-password" class="form-control" placeholder="At least 6 characters" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-confirm">Confirm Password *</label>
+            <input type="password" id="reg-confirm" class="form-control" placeholder="Re-enter password" required>
+          </div>
+          <div id="reg-msg" class="form-group" style="font-size: 0.85rem; display: none;"></div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">✨ Create Account</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Main Dashboard View (Shown when logged in) -->
+    <div id="dashboard-screen" style="display: none; width: 100%; height: 100%; min-height: 100vh;">
+      <div style="display: flex; min-height: 100vh; width: 100%;">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+          <div class="brand">
+            <span class="brand-icon">💊</span>
+            <div>
+              <div class="brand-title">MediRemind</div>
+              <div class="brand-subtitle">Health Tracker</div>
+            </div>
+          </div>
+
+          <div class="user-profile-badge">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <div class="user-info">
+              <div class="user-name" id="user-display-name">User</div>
+              <div class="user-role">Active Account</div>
+            </div>
+          </div>
+
+          <nav class="nav-menu">
+            <a class="nav-item active" id="nav-overview" onclick="switchView('overview')">
+              <span class="nav-icon">🏠</span> Overview
+            </a>
+            <a class="nav-item" id="nav-medicines" onclick="switchView('medicines')">
+              <span class="nav-icon">💊</span> Medicines
+            </a>
+            <a class="nav-item" id="nav-schedule" onclick="switchView('schedule')">
+              <span class="nav-icon">📅</span> Daily Schedule
+            </a>
+            <a class="nav-item" id="nav-history" onclick="switchView('history')">
+              <span class="nav-icon">📊</span> History & Reports
+            </a>
+          </nav>
+
+          <button class="logout-btn" onclick="handleLogout()">
+            <span>🚪</span> Log Out
+          </button>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+          
+          <!-- Top Sticky Header -->
+          <header class="top-header">
+            <div class="header-title">
+              <h2 id="page-title">Overview Dashboard</h2>
+            </div>
+            <div class="header-actions">
+              <div class="current-time-badge">
+                <span>🕒</span> <span id="clock-display">00:00:00 AM</span>
+              </div>
+              <button class="btn btn-primary" onclick="openAddMedicineModal()">
+                <span>➕</span> Add Medicine
+              </button>
+            </div>
+          </header>
+
+          <div class="view-container">
+
+            <!-- Page 1: Overview View -->
+            <section id="view-overview" class="view-page active">
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-icon primary">💊</div>
+                  <div class="stat-details">
+                    <h4>Active Medicines</h4>
+                    <div class="stat-value" id="stat-total-meds">0</div>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon success">✅</div>
+                  <div class="stat-details">
+                    <h4>Taken Today</h4>
+                    <div class="stat-value" id="stat-taken-today">0</div>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon danger">❌</div>
+                  <div class="stat-details">
+                    <h4>Missed Today</h4>
+                    <div class="stat-value" id="stat-missed-today">0</div>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon warning">📈</div>
+                  <div class="stat-details">
+                    <h4>Adherence Rate</h4>
+                    <div class="stat-value" id="stat-adherence-rate">100%</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <h3>📅 Today's Upcoming Reminders</h3>
+                  <button class="btn btn-secondary" onclick="switchView('schedule')">View Full Schedule</button>
+                </div>
+                <div id="overview-dose-list" class="dose-list">
+                  <!-- Rendered dynamically -->
+                </div>
+              </div>
+            </section>
+
+            <!-- Page 2: Medicines View -->
+            <section id="view-medicines" class="view-page">
+              <div class="filter-bar">
+                <div class="search-box">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" id="search-med-input" class="form-control" placeholder="Search medicines by name or dosage..." oninput="renderMedicinesView()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddMedicineModal()">➕ Add New Medicine</button>
+              </div>
+
+              <div id="medicines-grid" class="med-grid">
+                <!-- Rendered dynamically -->
+              </div>
+            </section>
+
+            <!-- Page 3: Daily Schedule View -->
+            <section id="view-schedule" class="view-page">
+              <div class="filter-bar">
+                <div class="form-group" style="margin-bottom: 0; flex: 1; max-width: 250px;">
+                  <label for="schedule-date-picker">Select Date</label>
+                  <input type="date" id="schedule-date-picker" class="form-control" onchange="renderScheduleView()">
+                </div>
+                <div class="dose-btns">
+                  <button class="btn btn-secondary" onclick="setScheduleDate('today')">Today</button>
+                  <button class="btn btn-secondary" onclick="setScheduleDate('tomorrow')">Tomorrow</button>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <h3 id="schedule-date-title">Schedule for Today</h3>
+                </div>
+                <div id="schedule-dose-list" class="dose-list">
+                  <!-- Rendered dynamically -->
+                </div>
+              </div>
+            </section>
+
+            <!-- Page 4: History & Reports View -->
+            <section id="view-history" class="view-page">
+              <div class="filter-bar">
+                <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
+                  <label for="history-status-filter">Filter Status</label>
+                  <select id="history-status-filter" class="form-control" onchange="renderHistoryView()">
+                    <option value="ALL">All Statuses</option>
+                    <option value="TAKEN">Taken</option>
+                    <option value="MISSED">Missed</option>
+                  </select>
+                </div>
+                <button class="btn btn-success" onclick="exportHistoryCSV()">
+                  <span>📥</span> Export CSV Report
+                </button>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <h3>📊 Dose Log History</h3>
+                </div>
+                <div style="overflow-x: auto;">
+                  <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                      <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                        <th style="padding: 0.75rem;">Date & Time</th>
+                        <th style="padding: 0.75rem;">Medicine</th>
+                        <th style="padding: 0.75rem;">Dosage</th>
+                        <th style="padding: 0.75rem;">Status</th>
+                        <th style="padding: 0.75rem;">Marked At</th>
+                        <th style="padding: 0.75rem;">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                      <!-- Rendered dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Modal 1: Add/Edit Medicine -->
+    <div id="modal-medicine" class="modal-backdrop">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="modal-med-title">Add New Medicine</h3>
+          <button class="close-modal-btn" onclick="closeModal('modal-medicine')">&times;</button>
+        </div>
+        <form id="medicine-form" onsubmit="saveMedicine(event)">
+          <input type="hidden" id="med-id">
+          
+          <div class="form-group">
+            <label for="med-name">Medicine Name *</label>
+            <input type="text" id="med-name" class="form-control" placeholder="e.g. Paracetamol" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="med-dosage">Dosage *</label>
+              <input type="text" id="med-dosage" class="form-control" placeholder="e.g. 500mg, 1 tablet" required>
+            </div>
+            <div class="form-group">
+              <label for="med-frequency">Frequency *</label>
+              <select id="med-frequency" class="form-control">
+                <option value="Daily">Daily</option>
+                <option value="Twice Daily">Twice Daily</option>
+                <option value="Weekly">Weekly</option>
+                <option value="As Needed">As Needed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="med-time">Scheduled Time *</label>
+              <input type="time" id="med-time" class="form-control" value="08:00" required>
+            </div>
+            <div class="form-group">
+              <label for="med-start">Start Date *</label>
+              <input type="date" id="med-start" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="med-instructions">Special Instructions</label>
+            <input type="text" id="med-instructions" class="form-control" placeholder="e.g. Take after meal with water">
+          </div>
+
+          <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-medicine')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Medicine</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 2: Action Log Notes -->
+    <div id="modal-action-note" class="modal-backdrop">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="modal-action-title">Log Medicine Status</h3>
+          <button class="close-modal-btn" onclick="closeModal('modal-action-note')">&times;</button>
+        </div>
+        <form id="action-note-form" onsubmit="submitDoseAction(event)">
+          <input type="hidden" id="action-log-id">
+          <input type="hidden" id="action-status">
+
+          <div class="form-group">
+            <label for="action-notes">Optional Notes</label>
+            <input type="text" id="action-notes" class="form-control" placeholder="e.g. Taken after food, slight headache">
+          </div>
+
+          <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-action-note')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-submit-action">Confirm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

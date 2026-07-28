@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+*.db
+*.sqlite3
+
+# Environment & IDE
+.venv/
+venv/
+ENV/
+.vscode/
+.idea/
+.gemini/
+
+# Report test artifacts
+test_report.csv
+test_report.html

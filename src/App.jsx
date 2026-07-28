@@ -14,10 +14,16 @@ import {
   Edit2,
   User,
   ShieldCheck,
-  Bell
+  Bell,
+  Lock
 } from 'lucide-react';
 
 export default function App() {
+  // 1. Initialise auth state from localStorage
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem('isLoggedIn') === 'true'
+  );
+
   const [user, setUser] = useState({ name: 'Harshi Ranka', email: 'harshi@example.com' });
   const [activeTab, setActiveTab] = useState('overview'); // overview, medicines, schedule, history
   const [medicines, setMedicines] = useState([
@@ -35,6 +41,9 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
   const [formData, setFormData] = useState({
     name: '',
     dosage: '',
@@ -50,6 +59,19 @@ export default function App() {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // 2. Update login handler
+  const handleLogin = (e) => {
+    if (e) e.preventDefault();
+    localStorage.setItem('isLoggedIn', 'true');
+    setIsLoggedIn(true);
+  };
+
+  // 3. Update logout handler
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    setIsLoggedIn(false);
+  };
 
   const totalTaken = logs.filter(l => l.status === 'TAKEN').length;
   const totalMissed = logs.filter(l => l.status === 'MISSED').length;
@@ -114,6 +136,58 @@ export default function App() {
     m.dosage.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // 6. Unauthenticated View (Login Screen)
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans text-slate-100">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6">
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 bg-blue-600/20 text-blue-400 rounded-2xl border border-blue-500/30 flex items-center justify-center mx-auto shadow-lg">
+              <Pill className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 to-sky-300 bg-clip-text text-transparent">
+              Medicine Reminder System
+            </h1>
+            <p className="text-xs text-slate-400">Track doses, manage schedules & stay healthy</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Username</label>
+              <input
+                type="text"
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+                placeholder="Enter your username"
+                className="w-full bg-slate-950 border border-slate-800 px-4 py-2.5 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full bg-slate-950 border border-slate-800 px-4 py-2.5 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <Lock className="w-4 h-4" />
+              <span>🔐 Login to Account</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Protected View (Dashboard)
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
       {/* Sidebar */}
@@ -167,9 +241,13 @@ export default function App() {
           })}
         </nav>
 
-        <button className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all">
+        {/* 4. Ensure the Logout button uses handleLogout correctly */}
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all cursor-pointer"
+        >
           <LogOut className="w-5 h-5" />
-          <span>Log Out</span>
+          <span>Logout</span>
         </button>
       </aside>
 
@@ -189,7 +267,7 @@ export default function App() {
             </div>
             <button
               onClick={() => handleOpenModal()}
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-blue-600/20"
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add Medicine</span>
@@ -250,7 +328,7 @@ export default function App() {
                   <Bell className="w-5 h-5 text-blue-400" />
                   <span>Today's Dose Reminders</span>
                 </h3>
-                <button onClick={() => setActiveTab('schedule')} className="text-xs text-blue-400 hover:text-blue-300 font-semibold">
+                <button onClick={() => setActiveTab('schedule')} className="text-xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer">
                   View Full Schedule →
                 </button>
               </div>
@@ -278,13 +356,13 @@ export default function App() {
                       </span>
                       <button 
                         onClick={() => handleUpdateLogStatus(log.id, 'TAKEN')}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all"
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition-all cursor-pointer"
                       >
                         Taken
                       </button>
                       <button 
                         onClick={() => handleUpdateLogStatus(log.id, 'MISSED')}
-                        className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition-all"
+                        className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition-all cursor-pointer"
                       >
                         Missed
                       </button>
@@ -334,14 +412,14 @@ export default function App() {
                     <div className="pt-2 flex space-x-2 pl-2">
                       <button 
                         onClick={() => handleOpenModal(med)}
-                        className="flex-1 flex items-center justify-center space-x-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-all"
+                        className="flex-1 flex items-center justify-center space-x-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-all cursor-pointer"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                         <span>Edit</span>
                       </button>
                       <button 
                         onClick={() => handleDeleteMedicine(med.id)}
-                        className="flex-1 flex items-center justify-center space-x-1 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-lg border border-rose-500/20 transition-all"
+                        className="flex-1 flex items-center justify-center space-x-1 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-lg border border-rose-500/20 transition-all cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         <span>Delete</span>
@@ -372,13 +450,13 @@ export default function App() {
                     <div className="flex space-x-3">
                       <button 
                         onClick={() => handleUpdateLogStatus(log.id, 'TAKEN')}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20"
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 cursor-pointer"
                       >
                         Mark Taken
                       </button>
                       <button 
                         onClick={() => handleUpdateLogStatus(log.id, 'MISSED')}
-                        className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-600/20"
+                        className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-600/20 cursor-pointer"
                       >
                         Mark Missed
                       </button>
@@ -394,7 +472,7 @@ export default function App() {
             <div className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-6 shadow-xl space-y-6">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <h3 className="text-lg font-bold">Dose Log History</h3>
-                <button className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20">
+                <button className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 cursor-pointer">
                   <FileSpreadsheet className="w-4 h-4" />
                   <span>Export CSV Report</span>
                 </button>
@@ -439,7 +517,7 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <h3 className="font-bold text-lg text-slate-100">{editingMed ? 'Edit Medicine' : 'Add New Medicine'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-200 text-xl font-bold">&times;</button>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-200 text-xl font-bold cursor-pointer">&times;</button>
             </div>
 
             <form onSubmit={handleSaveMedicine} className="space-y-4">
@@ -520,13 +598,13 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all"
+                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20"
+                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
                 >
                   Save Medicine
                 </button>

@@ -15,6 +15,8 @@ ENV/
 .idea/
 .gemini/
 
-# Report test artifacts
-test_report.csv
-test_report.html
+# Node & Build artifacts
+node_modules/
+dist/
+.DS_Store
+
